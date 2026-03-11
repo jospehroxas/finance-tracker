@@ -1,4 +1,4 @@
-# 💰 FinanceTracker
+# FinanceTracker
 
 A full-stack personal finance tracking web app built with **ASP.NET Core 8**, **Razor Pages**, **Entity Framework Core**, and **SQLite**.
 
@@ -6,7 +6,7 @@ A full-stack personal finance tracking web app built with **ASP.NET Core 8**, **
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8)
@@ -63,7 +63,7 @@ dotnet test
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 FinanceTracker.sln
@@ -79,7 +79,7 @@ FinanceTracker.sln
 
 ---
 
-## 🌐 Deploy to Azure
+## Deploy to Azure
 
 1. Create Azure App Service (Free tier, .NET 8 runtime)
 2. Add GitHub Secrets: `AZURE_APP_NAME` + `AZURE_PUBLISH_PROFILE`
