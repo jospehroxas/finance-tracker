@@ -1,0 +1,201 @@
+@page
+@model FinanceTracker.Pages.Dashboard.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["ActivePage"] = "Dashboard";
+    var monthName = Model.MonthNames.Length > 0 ? Model.MonthNames[Model.SelectedMonth - 1] : "";
+    var savingsClass = Model.Summary.NetSavings >= 0 ? "text-success" : "text-danger";
+    var savingsIcon = Model.Summary.NetSavings >= 0 ? "bi-arrow-up-circle-fill" : "bi-arrow-down-circle-fill";
+    var expenseLabels = System.Text.Json.JsonSerializer.Serialize(Model.Summary.ExpensesByCategory.Keys);
+    var expenseValues = System.Text.Json.JsonSerializer.Serialize(Model.Summary.ExpensesByCategory.Values);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold mb-0">📊 Dashboard</h2>
+        <p class="text-muted mb-0">@monthName @Model.SelectedYear overview</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <!-- Month/Year Picker -->
+        <form method="get" class="d-flex gap-2">
+            <select name="SelectedMonth" class="form-select form-select-sm" style="width:130px" onchange="this.form.submit()">
+                @for (int i = 1; i <= 12; i++)
+                {
+                    <option value="@i" selected="@(Model.SelectedMonth == i)">@Model.MonthNames[i - 1]</option>
+                }
+            </select>
+            <select name="SelectedYear" class="form-select form-select-sm" style="width:90px" onchange="this.form.submit()">
+                @foreach (var y in Model.AvailableYears)
+                {
+                    <option value="@y" selected="@(Model.SelectedYear == y)">@y</option>
+                }
+            </select>
+        </form>
+        <!-- Export CSV -->
+        <form method="post" asp-page-handler="Export">
+            <input type="hidden" name="SelectedMonth" value="@Model.SelectedMonth" />
+            <input type="hidden" name="SelectedYear" value="@Model.SelectedYear" />
+            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-download me-1"></i>Export CSV
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-2 me-3">
+                        <i class="bi bi-arrow-up-circle-fill text-success fs-4"></i>
+                    </div>
+                    <span class="text-muted small fw-semibold text-uppercase">Total Income</span>
+                </div>
+                <h3 class="fw-bold text-success mb-0">$@Model.Summary.TotalIncome.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-2 me-3">
+                        <i class="bi bi-arrow-down-circle-fill text-danger fs-4"></i>
+                    </div>
+                    <span class="text-muted small fw-semibold text-uppercase">Total Expenses</span>
+                </div>
+                <h3 class="fw-bold text-danger mb-0">$@Model.Summary.TotalExpenses.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3">
+                        <i class="bi @savingsIcon text-primary fs-4"></i>
+                    </div>
+                    <span class="text-muted small fw-semibold text-uppercase">Net Savings</span>
+                </div>
+                <h3 class="fw-bold @savingsClass mb-0">$@Model.Summary.NetSavings.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart + Recent Transactions -->
+<div class="row g-3">
+    <!-- Donut Chart -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                <h6 class="fw-semibold mb-0">Expenses by Category</h6>
+            </div>
+            <div class="card-body d-flex justify-content-center align-items-center">
+                @if (Model.Summary.ExpensesByCategory.Count > 0)
+                {
+                    <div id="expenseChart"></div>
+                }
+                else
+                {
+                    <p class="text-muted text-center py-5">No expenses this month</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                <h6 class="fw-semibold mb-0">Recent Transactions</h6>
+                <a href="/Transactions" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.Summary.RecentTransactions.Count == 0)
+                {
+                    <p class="text-muted text-center py-5">No transactions this month</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Date</th>
+                                    <th>Category</th>
+                                    <th class="text-end pe-3">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var t in Model.Summary.RecentTransactions)
+                                {
+                                    <tr>
+                                        <td class="ps-3 text-muted small">@t.Date.ToString("MMM d")</td>
+                                        <td>
+                                            <span class="badge @(t.Type == FinanceTracker.Models.TransactionType.Income ? "bg-success" : "bg-danger") bg-opacity-10 @(t.Type == FinanceTracker.Models.TransactionType.Income ? "text-success" : "text-danger") fw-normal">
+                                                @t.Category
+                                            </span>
+                                        </td>
+                                        <td class="text-end pe-3 fw-semibold @(t.Type == FinanceTracker.Models.TransactionType.Income ? "text-success" : "text-danger")">
+                                            @(t.Type == FinanceTracker.Models.TransactionType.Income ? "+" : "-")$@t.Amount.ToString("N2")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Income breakdown -->
+@if (Model.Summary.IncomeByCategory.Count > 0)
+{
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+            <h6 class="fw-semibold mb-0">Income Breakdown</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                @foreach (var kv in Model.Summary.IncomeByCategory.OrderByDescending(x => x.Value))
+                {
+                    var pct = Model.Summary.TotalIncome > 0 ? (kv.Value / Model.Summary.TotalIncome * 100) : 0;
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small">@kv.Key</span>
+                            <span class="small fw-semibold">$@kv.Value.ToString("N2") <span class="text-muted">(@pct.ToString("N0")%)</span></span>
+                        </div>
+                        <div class="progress" style="height:6px">
+                            <div class="progress-bar bg-success" style="width:@pct%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    @if (Model.Summary.ExpensesByCategory.Count > 0)
+    {
+        <script>
+            var options = {
+                series: @Html.Raw(expenseValues),
+                labels: @Html.Raw(expenseLabels),
+                chart: { type: 'donut', height: 300, fontFamily: 'inherit' },
+                colors: ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#a855f7','#ec4899','#14b8a6','#f43f5e','#8b5cf6','#06b6d4','#84cc16'],
+                legend: { position: 'bottom', fontSize: '12px' },
+                plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', formatter: (w) => '$' + w.globals.seriesTotals.reduce((a,b)=>a+b,0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) } } } } },
+                dataLabels: { enabled: false },
+                tooltip: { y: { formatter: (val) => '$' + val.toFixed(2) } }
+            };
+            new ApexCharts(document.getElementById('expenseChart'), options).render();
+        </script>
+    }
+}

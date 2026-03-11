@@ -1,0 +1,188 @@
+@page
+@model FinanceTracker.Pages.Transactions.IndexModel
+@{
+    ViewData["Title"] = "Transactions";
+    ViewData["ActivePage"] = "Transactions";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold mb-0">💳 Transactions</h2>
+        <p class="text-muted mb-0">@Model.Transactions.Count transactions found</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/Transactions/Upsert" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add Transaction
+        </a>
+        <form method="post" asp-page-handler="Export">
+            <input type="hidden" name="FilterYear" value="@Model.FilterYear" />
+            <input type="hidden" name="FilterMonth" value="@Model.FilterMonth" />
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="bi bi-download me-1"></i>Export CSV
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-sm-6 col-md-2">
+                <label class="form-label small fw-semibold text-muted">Year</label>
+                <select name="FilterYear" class="form-select form-select-sm">
+                    <option value="">All Years</option>
+                    @for (int y = DateTime.Today.Year; y >= DateTime.Today.Year - 3; y--)
+                    {
+                        <option value="@y" selected="@(Model.FilterYear == y)">@y</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-2">
+                <label class="form-label small fw-semibold text-muted">Month</label>
+                <select name="FilterMonth" class="form-select form-select-sm">
+                    <option value="">All Months</option>
+                    @{
+                        var months = new[] { "January","February","March","April","May","June","July","August","September","October","November","December" };
+                        for (int m = 1; m <= 12; m++)
+                        {
+                            <option value="@m" selected="@(Model.FilterMonth == m)">@months[m - 1]</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small fw-semibold text-muted">Category</label>
+                <select name="FilterCategory" class="form-select form-select-sm">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <option value="@cat" selected="@(Model.FilterCategory == cat)">@cat</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-2">
+                <label class="form-label small fw-semibold text-muted">Type</label>
+                <select name="FilterType" class="form-select form-select-sm">
+                    <option value="">All Types</option>
+                    <option value="Income" selected="@(Model.FilterType == "Income")">Income</option>
+                    <option value="Expense" selected="@(Model.FilterType == "Expense")">Expense</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
+                <a href="/Transactions" class="btn btn-sm btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Row -->
+<div class="row g-2 mb-3">
+    <div class="col-auto">
+        <span class="badge bg-success bg-opacity-10 text-success fs-6 fw-semibold px-3 py-2">
+            ↑ Income: $@Model.TotalIncome.ToString("N2")
+        </span>
+    </div>
+    <div class="col-auto">
+        <span class="badge bg-danger bg-opacity-10 text-danger fs-6 fw-semibold px-3 py-2">
+            ↓ Expenses: $@Model.TotalExpenses.ToString("N2")
+        </span>
+    </div>
+    <div class="col-auto">
+        <span class="badge @(Model.TotalIncome - Model.TotalExpenses >= 0 ? "bg-primary" : "bg-warning") bg-opacity-10 @(Model.TotalIncome - Model.TotalExpenses >= 0 ? "text-primary" : "text-warning") fs-6 fw-semibold px-3 py-2">
+            Net: $@((Model.TotalIncome - Model.TotalExpenses).ToString("N2"))
+        </span>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        @if (Model.Transactions.Count == 0)
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size:3rem"></i>
+                <p class="text-muted mt-2">No transactions found. <a href="/Transactions/Upsert">Add your first one!</a></p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Date</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Notes</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end pe-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model.Transactions)
+                        {
+                            <tr>
+                                <td class="ps-3 text-muted small">@t.Date.ToString("MMM d, yyyy")</td>
+                                <td>
+                                    <span class="badge @(t.Type == FinanceTracker.Models.TransactionType.Income ? "bg-success" : "bg-danger") rounded-pill">
+                                        @t.Type
+                                    </span>
+                                </td>
+                                <td>@t.Category</td>
+                                <td class="text-muted small" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="@t.Notes">@(t.Notes ?? "—")</td>
+                                <td class="text-end fw-semibold @(t.Type == FinanceTracker.Models.TransactionType.Income ? "text-success" : "text-danger")">
+                                    @(t.Type == FinanceTracker.Models.TransactionType.Income ? "+" : "-")$@t.Amount.ToString("N2")
+                                </td>
+                                <td class="text-end pe-3">
+                                    <a href="/Transactions/Upsert/@t.Id" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDelete(@t.Id, '@t.Category', '$@t.Amount.ToString("N2")')"
+                                            title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Delete Transaction?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this <strong id="deleteCategory"></strong> transaction of <strong id="deleteAmount"></strong>? This cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" asp-page-handler="Delete" id="deleteForm">
+                    <input type="hidden" name="id" id="deleteId" />
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, category, amount) {
+            document.getElementById('deleteId').value = id;
+            document.getElementById('deleteCategory').textContent = category;
+            document.getElementById('deleteAmount').textContent = amount;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
+}

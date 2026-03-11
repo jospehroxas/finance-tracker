@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] – FinanceTracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-light">
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <!-- Sidebar Layout -->
+    <div class="d-flex" style="min-height:100vh">
+        <!-- Sidebar -->
+        <nav class="sidebar d-none d-lg-flex flex-column flex-shrink-0 p-3 bg-white shadow-sm" style="width:220px">
+            <a href="/Dashboard" class="d-flex align-items-center mb-4 text-decoration-none">
+                <span class="fs-5 fw-bold text-primary">💰 FinTrack</span>
+            </a>
+            <ul class="nav nav-pills flex-column mb-auto gap-1">
+                <li class="nav-item">
+                    <a href="/Dashboard" class="nav-link @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "text-dark")">
+                        <i class="bi bi-grid-1x2 me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Transactions" class="nav-link @(ViewData["ActivePage"]?.ToString() == "Transactions" ? "active" : "text-dark")">
+                        <i class="bi bi-list-ul me-2"></i>Transactions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Transactions/Upsert" class="nav-link @(ViewData["ActivePage"]?.ToString() == "Add" ? "active" : "text-dark")">
+                        <i class="bi bi-plus-circle me-2"></i>Add New
+                    </a>
+                </li>
+            </ul>
+            <hr />
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" data-bs-toggle="dropdown">
+                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;font-size:14px">
+                        @User.Identity!.Name!.Substring(0, 1).ToUpper()
+                    </div>
+                    <small class="text-truncate" style="max-width:110px">@User.Identity.Name</small>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark shadow">
+                    <li><a class="dropdown-item" href="/Identity/Account/Manage">Profile</a></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                        <form method="post" action="/Identity/Account/Logout">
+                            <button type="submit" class="dropdown-item">Sign out</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="flex-grow-1 d-flex flex-column">
+            <!-- Mobile topbar -->
+            <nav class="navbar navbar-light bg-white shadow-sm d-lg-none px-3">
+                <a class="navbar-brand fw-bold text-primary" href="/Dashboard">💰 FinTrack</a>
+                <div class="d-flex gap-2">
+                    <a href="/Dashboard" class="btn btn-sm btn-outline-secondary"><i class="bi bi-grid-1x2"></i></a>
+                    <a href="/Transactions" class="btn btn-sm btn-outline-secondary"><i class="bi bi-list-ul"></i></a>
+                    <a href="/Transactions/Upsert" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i></a>
+                </div>
+            </nav>
+
+            <main class="flex-grow-1 p-4">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                        <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Simple centered layout for auth pages -->
+    <nav class="navbar navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/">💰 FinanceTracker</a>
+            <div class="d-flex gap-2">
+                <a href="/Identity/Account/Login" class="btn btn-sm btn-outline-primary">Login</a>
+                <a href="/Identity/Account/Register" class="btn btn-sm btn-primary">Register</a>
+            </div>
+        </div>
+    </nav>
+    <main class="container py-5">
+        @RenderBody()
+    </main>
+}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

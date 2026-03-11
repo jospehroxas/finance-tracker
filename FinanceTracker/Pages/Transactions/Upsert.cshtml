@@ -1,0 +1,109 @@
+@page "{id?}"
+@model FinanceTracker.Pages.Transactions.UpsertModel
+@{
+    ViewData["Title"] = Model.IsEdit ? "Edit Transaction" : "Add Transaction";
+    ViewData["ActivePage"] = "Transactions";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                <h4 class="fw-bold mb-0">
+                    @if (Model.IsEdit)
+                    {
+                        <i class="bi bi-pencil-square me-2 text-primary"></i>
+                        <text>Edit Transaction</text>
+                    }
+                    else
+                    {
+                        <i class="bi bi-plus-circle me-2 text-success"></i>
+                        <text>Add Transaction</text>
+                    }
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    <input type="hidden" asp-for="Transaction.Id" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:none"></div>
+
+                    <!-- Type Toggle -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Type</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" asp-for="Transaction.Type" value="Income" id="typeIncome" />
+                            <label class="btn btn-outline-success" for="typeIncome">
+                                <i class="bi bi-arrow-up-circle me-1"></i>Income
+                            </label>
+                            <input type="radio" class="btn-check" asp-for="Transaction.Type" value="Expense" id="typeExpense" />
+                            <label class="btn btn-outline-danger" for="typeExpense">
+                                <i class="bi bi-arrow-down-circle me-1"></i>Expense
+                            </label>
+                        </div>
+                        <span asp-validation-for="Transaction.Type" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="mb-3">
+                        <label asp-for="Transaction.Amount" class="form-label fw-semibold">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input asp-for="Transaction.Amount" class="form-control" placeholder="0.00" type="number" step="0.01" min="0.01" />
+                        </div>
+                        <span asp-validation-for="Transaction.Amount" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="mb-3">
+                        <label asp-for="Transaction.Category" class="form-label fw-semibold">Category</label>
+                        <select asp-for="Transaction.Category" asp-items="Model.CategoryOptions" class="form-select">
+                            <option value="">— Select a category —</option>
+                        </select>
+                        <span asp-validation-for="Transaction.Category" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="mb-3">
+                        <label asp-for="Transaction.Date" class="form-label fw-semibold">Date</label>
+                        <input asp-for="Transaction.Date" class="form-control" type="date" />
+                        <span asp-validation-for="Transaction.Date" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-4">
+                        <label asp-for="Transaction.Notes" class="form-label fw-semibold">Notes <span class="text-muted fw-normal">(optional)</span></label>
+                        <textarea asp-for="Transaction.Notes" class="form-control" rows="2" placeholder="Add any additional details..."></textarea>
+                        <span asp-validation-for="Transaction.Notes" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-lg me-1"></i>@(Model.IsEdit ? "Save Changes" : "Add Transaction")
+                        </button>
+                        <a href="/Transactions" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Auto-set category when type changes
+        document.querySelectorAll('[name="Transaction.Type"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const categorySelect = document.querySelector('[name="Transaction.Category"]');
+                categorySelect.value = '';
+            });
+        });
+
+        // Format date input
+        const dateInput = document.querySelector('[name="Transaction.Date"]');
+        if (dateInput && !dateInput.value) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+        }
+    </script>
+}

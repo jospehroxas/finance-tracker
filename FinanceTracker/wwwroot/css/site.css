@@ -1,0 +1,55 @@
+/* FinanceTracker - Custom Styles */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.sidebar .nav-link {
+    border-radius: 8px;
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    transition: background-color 0.15s;
+}
+
+.sidebar .nav-link:hover:not(.active) {
+    background-color: #f8f9fa;
+}
+
+/* Cards */
+.card {
+    border-radius: 12px;
+}
+
+/* Table enhancements */
+.table > :not(caption) > * > * {
+    padding: 0.85rem 0.75rem;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9ff;
+}
+
+/* Badge tweaks */
+.badge {
+    font-weight: 500;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #adb5bd; }
+
+/* Validation */
+.field-validation-error { font-size: 0.8rem; }
+
+/* ApexCharts fix */
+#expenseChart { width: 100%; max-width: 360px; }
