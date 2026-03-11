@@ -11,7 +11,17 @@ public static class DbInitializer
         var context = services.GetRequiredService<ApplicationDbContext>();
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
-        await context.Database.MigrateAsync();
+        // Check if AspNetUsers table exists — if not, wipe and recreate from model
+        try
+        {
+            await context.Users.AnyAsync();
+        }
+        catch
+        {
+            await context.Database.EnsureDeletedAsync();
+        }
+
+        await context.Database.EnsureCreatedAsync();
 
         // Seed demo user
         const string demoEmail = "demo@financetracker.com";
@@ -37,12 +47,10 @@ public static class DbInitializer
             var transactions = new List<Transaction>();
             var now = DateTime.Today;
 
-            // Generate 3 months of data
             for (int monthOffset = -2; monthOffset <= 0; monthOffset++)
             {
                 var baseDate = new DateTime(now.Year, now.Month, 1).AddMonths(monthOffset);
 
-                // Monthly salary
                 transactions.Add(new Transaction
                 {
                     Amount = 4500m,
@@ -53,7 +61,6 @@ public static class DbInitializer
                     UserId = demoUser.Id
                 });
 
-                // Freelance income (some months)
                 if (monthOffset != -1)
                 {
                     transactions.Add(new Transaction
@@ -67,7 +74,6 @@ public static class DbInitializer
                     });
                 }
 
-                // Regular expenses
                 var expenses = new[]
                 {
                     (1200m, "Housing", "Monthly rent"),
