@@ -2,6 +2,7 @@ using FinanceTracker.Data;
 using FinanceTracker.Models;
 using FinanceTracker.Services;
 using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 namespace FinanceTracker.Tests;
 
